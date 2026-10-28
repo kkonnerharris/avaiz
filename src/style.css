@@ -2,3 +2,13 @@
 /* Reference framing: quiet corner typography leaves the landscape uninterrupted. */
 @media(min-width:761px){.header{left:6.5%;right:6.5%;top:8.5vh;display:block}.logo{display:inline-block;font-size:61px}.copyright{margin-top:25px;font-size:10px;line-height:1.65}.menu-toggle{position:absolute;right:0;top:-5vh;font-size:9px}.manifesto-intro{right:6.5%;top:9vh;width:230px;text-align:right}.manifesto-intro p{font-size:14px;line-height:1.45;margin-top:20px}.hero-scroll{left:6.5%}.bottom-controls{left:6.5%}.coordinates{right:6.5%}.scene-label{opacity:.5}.navigation{right:6.5%;top:90px}}
 .copyright{transition:opacity .4s}body.scrolled .copyright{opacity:0}
+
+.services{height:auto;padding:0}.services .section-heading{min-height:100svh;display:flex;flex-direction:column;justify-content:center;align-items:center}
+.cube-panel{position:relative;min-height:120svh;display:flex;align-items:center;padding:0 9%}
+.cube-copy{max-width:360px}.cube-copy h3{font-family:Arial,Helvetica,sans-serif;font-size:clamp(54px,6.3vw,100px);font-weight:500;line-height:.92;letter-spacing:-.07em;margin:22px 0 26px}
+.cube-copy p{font-size:12px;line-height:1.8;opacity:.9;margin:0 0 30px}
+.cube-copy .service-target{flex-direction:row;align-items:center;gap:22px;padding:14px 0;border:0;border-top:1px solid #ffffff70;width:220px;justify-content:space-between}
+.cube-copy .service-target .service-hint{margin:0;font-size:9px;opacity:1}.cube-copy .service-target i{font-style:normal;font-size:16px}
+.cube-index{position:absolute;right:9%;bottom:14vh;font-size:10px;letter-spacing:2px;opacity:.7}
+.services .service-note{position:static;padding:0 0 18vh}
+@media(max-width:760px){.cube-panel{align-items:flex-end;padding:0 25px 20vh;min-height:115svh}.cube-copy h3{font-size:46px;margin:14px 0 16px}.cube-copy p{font-size:11px;margin-bottom:20px}.cube-index{right:25px;bottom:auto;top:16vh}}
