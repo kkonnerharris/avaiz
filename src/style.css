@@ -12,3 +12,11 @@
 .cube-index{position:absolute;right:9%;bottom:14vh;font-size:10px;letter-spacing:2px;opacity:.7}
 .services .service-note{position:static;padding:0 0 18vh}
 @media(max-width:760px){.cube-panel{align-items:flex-end;padding:0 25px 20vh;min-height:115svh}.cube-copy h3{font-size:46px;margin:14px 0 16px}.cube-copy p{font-size:11px;margin-bottom:20px}.cube-index{right:25px;bottom:auto;top:16vh}}
+
+.services{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cpath d='M57 60h6M60 57v6' stroke='%23ffffff' stroke-opacity='.45' stroke-width='1'/%3E%3C/svg%3E");background-size:120px 120px}
+.ice-hud{position:absolute;left:64.5%;top:50%;width:min(640px,46vw);aspect-ratio:600/520;transform:translate(-50%,-50%);pointer-events:none;opacity:0;transition:opacity .6s .15s;font-size:11px;letter-spacing:1px;line-height:1.45;text-transform:uppercase}
+.cube-panel.landed .ice-hud{opacity:1}
+.ice-hud svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}.ice-hud path{fill:none;stroke:#fff;stroke-opacity:.75;stroke-width:1;vector-effect:non-scaling-stroke}.ice-hud .hud-plus path{stroke-opacity:1}
+.ice-hud span{position:absolute;white-space:nowrap}.hud-tl{left:2%;top:13%;transform:translateY(-100%)}.hud-tr{right:4%;top:14%;text-align:right}.hud-br{right:9%;top:71%;text-align:right}
+@media(max-width:760px){.ice-hud{left:50%;top:calc(50% - 22svh);width:94vw;font-size:8px}}
+@media(prefers-reduced-motion:reduce){.ice-hud{transition:none}}
