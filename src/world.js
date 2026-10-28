@@ -4,6 +4,7 @@ import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { clamp, smooth } from './content.js';
 
 // Deterministic procedural assets: no Igloo code, models, or textures are shipped.
+const bounce=t=>{const n=7.5625,d=2.75;if(t<1/d)return n*t*t;if(t<2/d)return n*(t-=1.5/d)*t+.75;if(t<2.5/d)return n*(t-=2.25/d)*t+.9375;return n*(t-=2.625/d)*t+.984375};
 function hash(x,y){const v=Math.sin(x*127.1+y*311.7)*43758.5453;return v-Math.floor(v)}
 function noise(x,y){const ix=Math.floor(x),iy=Math.floor(y),fx=x-ix,fy=y-iy;const sx=fx*fx*(3-2*fx),sy=fy*fy*(3-2*fy);return THREE.MathUtils.lerp(THREE.MathUtils.lerp(hash(ix,iy),hash(ix+1,iy),sx),THREE.MathUtils.lerp(hash(ix,iy+1),hash(ix+1,iy+1),sx),sy)}
 function fbm(x,y){let v=0,a=.5;for(let i=0;i<5;i++){v+=noise(x,y)*a;x=x*2.07+3;y=y*2.03+7;a*=.5}return v}
@@ -27,7 +28,7 @@ export function createWorld(container, {onReady, onFail}) {
  const frost=frostTexture();frost.anisotropy=4;
  const ice=new THREE.MeshPhysicalMaterial({color:'#8291a8',map:frost,bumpMap:frost,bumpScale:.115,roughness:.41,metalness:.12,clearcoat:.58,clearcoatRoughness:.24,envMapIntensity:.8});
  const snowMat=new THREE.MeshStandardMaterial({color:'#c5cedb',map:frost,bumpMap:frost,bumpScale:.1,roughness:.92,metalness:.04});
- function terrainHeight(x,z){const radius=Math.sqrt(x*x+z*z);const plateau=1-Math.exp(-radius*radius/36);const ridges=Math.pow(fbm(x*.09+18,z*.09+32),2)*10;const hills=2.2*Math.sin(x*.13+.6)*Math.cos(z*.12);return (ridges+hills)*plateau-.22;}
+ function terrainHeight(x,z){const radius=Math.sqrt(x*x+z*z);const plateau=1-Math.exp(-radius*radius/150);const ridges=Math.pow(fbm(x*.09+18,z*.09+32),2)*10;const hills=2.2*Math.sin(x*.13+.6)*Math.cos(z*.12);return (ridges+hills)*plateau-.22;}
  const terrainGeo=new THREE.PlaneGeometry(160,160,lowPower?70:mobile?140:240,lowPower?70:mobile?140:240);terrainGeo.rotateX(-Math.PI/2);const tPos=terrainGeo.attributes.position;for(let i=0;i<tPos.count;i++){const x=tPos.getX(i),z=tPos.getZ(i);tPos.setY(i,terrainHeight(x,z));}terrainGeo.computeVertexNormals();
  const terrain=new THREE.Mesh(terrainGeo,snowMat);terrain.receiveShadow=true;scene.add(terrain);
  // Distant ridges provide atmosphere without a photographic backdrop.
@@ -72,12 +73,12 @@ export function createWorld(container, {onReady, onFail}) {
  const explode=smooth(.13,.38,p);const leave=smooth(.35,.52,p);const displays=smooth(.39,.54,p)*(1-smooth(.73,.84,p));const ending=smooth(.75,.91,p);
  igloo.visible=p<.57;terrain.visible=p<.65;objects.visible=displays>.005;constellation.visible=ending>.01;
  igloo.position.set(explode*(narrow?1.2:2.5),-leave*5,narrow?-.6:0);igloo.scale.setScalar(1-leave*.3);igloo.rotation.y=-.2+explode*.5;
- blocks.forEach((b,i)=>{const seed=b.userData.seed;const home=b.userData.home;const dir=b.userData.direction;b.position.copy(home);b.position.x+=dir.x*explode*(1.6+seed);b.position.y+=explode*(.6+seed*2.5);b.position.z+=dir.z*explode*(1.6+seed);b.rotation.x=b.userData.rot.x+explode*(seed-.5)*.55;b.rotation.z=b.userData.rot.z+explode*(hash(i,4)-.5)*.7;});
+ blocks.forEach((b,i)=>{const seed=b.userData.seed;const home=b.userData.home;const dir=b.userData.direction;const top=clamp(home.y/2.8);const t=clamp(explode*1.8-(1-top)*.5-seed*.3);const land=.15+seed*.25;b.position.copy(home);b.position.x+=dir.x*t*(1.4+seed*2.2);b.position.z+=dir.z*t*(1.4+seed*2.2);b.position.y=home.y+(land-home.y)*bounce(t)+Math.sin(t*Math.PI)*.35;b.rotation.x=b.userData.rot.x+t*(seed-.5)*3.2;b.rotation.z=b.userData.rot.z+t*(hash(i,4)-.5)*3;});
  entrance.position.z=2.35+explode*.8;entrance.position.y=explode*.25;inner.visible=explode<.5;core.scale.setScalar(1+explode*.8);core.rotation.y=time*.25;
  const viewH=2*(narrow?15:14)*Math.tan(THREE.MathUtils.degToRad(camera.fov/2));
- cubes.forEach(({group,symbol},i)=>{const o=cubeOffsets[i];const near=1-smooth(.6,1.15,Math.abs(o));group.visible=near>.001;group.scale.setScalar(Math.max(.001,displays)*(narrow?.95:1.45)*(.8+.2*near));group.position.set(narrow?0:2.3,(narrow?3.9:2.35)-o*viewH*.9+Math.sin(time*.6+i)*.1,0);group.rotation.set(.2+Math.sin(time*.12+i)*.05,-.55+o*.9+Math.sin(time*.18+i)*.1,.05);symbol.rotation.y=time*.15;const scale=hovered===i?1.12:1;symbol.scale.lerp(new THREE.Vector3(scale,scale,scale),.07);});
+ cubes.forEach(({group,symbol},i)=>{const o=cubeOffsets[i];const near=o>0?1-smooth(.95,1.05,o):1-smooth(.6,1.15,-o);group.visible=near>.001;group.scale.setScalar(Math.max(.001,displays)*(narrow?.95:1.45)*(.8+.2*near));const t=clamp((1-o)/.9);const drop=o>0?(1-bounce(t))*viewH*.8:-o*viewH*.9;group.position.set(narrow?0:2.3,(narrow?3.9:2.35)+drop+Math.sin(time*.6+i)*.06,0);group.rotation.set(.2+(1-t)*2.4+Math.sin(time*.12+i)*.05,-.55+(1-t)*1.6+Math.min(0,o)*.9+Math.sin(time*.18+i)*.1,.05+(1-t)*.9);symbol.rotation.y=time*.15;const scale=hovered===i?1.12:1;symbol.scale.lerp(new THREE.Vector3(scale,scale,scale),.07);});
  constellation.scale.setScalar(Math.max(.001,ending));constellation.position.x=narrow?1.2:3.3;constellation.rotation.y=time*.07;constellation.rotation.z=.25;
- const cameraHome=narrow?new THREE.Vector3(5.3,3.5,12.8):new THREE.Vector3(6.4,3.8,11.5);const cameraGallery=new THREE.Vector3(0,3.6,narrow?15:14);const camT=smooth(.30,.54,p);targets[0].copy(cameraHome).lerp(cameraGallery,camT);targets[0].x+=(reduced?0:pointer.x*.22);targets[0].y+=(reduced?0:-pointer.y*.13);camera.position.copy(targets[0]);targets[1].set(narrow?1.1:.15,1.25,0).lerp(new THREE.Vector3(0,2.35,0),camT);camera.lookAt(targets[1]);
+ const cameraHome=narrow?new THREE.Vector3(7.2,4.8,18.5):new THREE.Vector3(6.4,3.8,11.5);const cameraGallery=new THREE.Vector3(0,3.6,narrow?15:14);const camT=smooth(.30,.54,p);targets[0].copy(cameraHome).lerp(cameraGallery,camT);targets[0].x+=(reduced?0:pointer.x*.22);targets[0].y+=(reduced?0:-pointer.y*.13);camera.position.copy(targets[0]);targets[1].set(narrow?.5:.15,narrow?.6:1.25,0).lerp(new THREE.Vector3(0,2.35,0),camT);camera.lookAt(targets[1]);
  scene.fog.density=.024+smooth(.35,.57,p)*.018;scene.background.set('#a6afbd').lerp(new THREE.Color('#76879e'),smooth(.4,.58,p)).lerp(new THREE.Color('#63788f'),ending);scene.fog.color.copy(scene.background);
  if(!reduced){const pos=particlesGeo.attributes.position;for(let i=0;i<count;i++){pos.array[i*3]+=.035*dt;pos.array[i*3+1]-=(.14+hash(i,6)*.12)*dt;if(pos.array[i*3+1]<0)pos.array[i*3+1]=13;if(pos.array[i*3]>18)pos.array[i*3]=-18;}pos.needsUpdate=true;}
  renderer.render(scene,camera);container.dataset.ready='true';}
