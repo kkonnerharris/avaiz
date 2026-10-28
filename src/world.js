@@ -48,7 +48,7 @@ export function createWorld(container, {onReady, onFail}) {
  const terrain=new THREE.Mesh(terrainGeo,snowMat);terrain.receiveShadow=true;scene.add(terrain);
  // Distant ridges provide atmosphere without a photographic backdrop.
  const ridgeMat=new THREE.MeshStandardMaterial({color:'#bbc5d4',map:frost,bumpMap:frost,bumpScale:.25,roughness:1});
- for(let j=0;j<7;j++){const geo=new THREE.PlaneGeometry(40,30,45,35);geo.rotateX(-Math.PI/2);const p=geo.attributes.position;for(let i=0;i<p.count;i++){const x=p.getX(i),z=p.getZ(i);const peak=Math.exp(-(x*x/170+z*z/90));p.setY(i,peak*(6+fbm(x*.3+j,z*.3)*12)+fbm(x*.5,z*.5)*1.1);}geo.computeVertexNormals();const mountain=new THREE.Mesh(geo,ridgeMat);mountain.position.set((j-3)*23,-1,-29-hash(j,3)*14);scene.add(mountain);}
+ for(let j=0;j<7;j++){const geo=new THREE.PlaneGeometry(40,30,45,35);geo.rotateX(-Math.PI/2);const p=geo.attributes.position;for(let i=0;i<p.count;i++){const x=p.getX(i),z=p.getZ(i);const peak=Math.exp(-(x*x/170+z*z/90));p.setY(i,peak*(6+fbm(x*.3+j,z*.3)*12)+fbm(x*.5,z*.5)*1.1);}geo.computeVertexNormals();const mountain=new THREE.Mesh(geo,ridgeMat);mountain.visible=false;mountain.position.set((j-3)*23,-1,-29-hash(j,3)*14);scene.add(mountain);}
  const igloo=new THREE.Group();igloo.rotation.y=-.12;scene.add(igloo);const blocks=[];const radius=2.45;
  function register(mesh,index){mesh.castShadow=true;mesh.receiveShadow=true;mesh.userData.home=mesh.position.clone();mesh.userData.rot=mesh.rotation.clone();mesh.userData.seed=hash(index,42);mesh.geometry.computeBoundingBox();mesh.userData.direction=mesh.geometry.boundingBox.getCenter(new THREE.Vector3()).normalize();igloo.add(mesh);blocks.push(mesh);}
  // Rounded blocks are bent to each latitude, making a continuous domed shell.
@@ -89,7 +89,7 @@ export function createWorld(container, {onReady, onFail}) {
  function resize(){camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);composer?.setSize(innerWidth,innerHeight);render(performance.now());}window.addEventListener('resize',resize);
  function render(now){if(disposed)return;const dt=Math.min((now-last)/1000,.05);last=now;if(!reduced)time+=dt;softProgress=reduced?progress:THREE.MathUtils.lerp(softProgress,progress,1-Math.exp(-dt*7));const p=softProgress;const narrow=innerWidth<760;
  const explode=smooth(.13,.38,p);const leave=smooth(.35,.52,p);const displays=smooth(.39,.54,p)*(1-smooth(.73,.84,p));const ending=smooth(.75,.91,p);
- igloo.visible=p<.57;terrain.visible=p<.5;objects.visible=displays>.005;constellation.visible=ending>.01;
+ igloo.visible=false;terrain.visible=false;objects.visible=displays>.005;constellation.visible=ending>.01;
  igloo.position.set(explode*(narrow?1.2:2.5),-leave*5,narrow?-.6:0);igloo.scale.setScalar(1-leave*.3);igloo.rotation.y=-.2+explode*.5;
  blocks.forEach((b,i)=>{const seed=b.userData.seed;const home=b.userData.home;const dir=b.userData.direction;const top=clamp(home.y/2.8);const t=clamp(explode*1.8-(1-top)*.5-seed*.3);const land=.15+seed*.25;b.position.copy(home);b.position.x+=dir.x*t*(1.4+seed*2.2);b.position.z+=dir.z*t*(1.4+seed*2.2);b.position.y=home.y+(land-home.y)*bounce(t)+Math.sin(t*Math.PI)*.35;b.rotation.x=b.userData.rot.x+t*(seed-.5)*3.2;b.rotation.z=b.userData.rot.z+t*(hash(i,4)-.5)*3;});
  entrance.position.z=2.35+explode*.8;entrance.position.y=explode*.25;inner.visible=explode<.5;core.scale.setScalar(1+explode*.8);core.rotation.y=time*.25;

@@ -20,3 +20,8 @@
 .ice-hud span{position:absolute;white-space:nowrap}.hud-tl{left:2%;top:13%;transform:translateY(-100%)}.hud-tr{right:4%;top:14%;text-align:right}.hud-br{right:9%;top:71%;text-align:right}
 @media(max-width:760px){.ice-hud{left:50%;top:calc(50% - 22svh);width:94vw;font-size:8px}}
 @media(prefers-reduced-motion:reduce){.ice-hud{transition:none}}
+
+.hero-photo{position:fixed;inset:0;z-index:1;pointer-events:none;overflow:hidden;background:#1d2533}
+.hero-photo img{width:100%;height:100%;object-fit:cover;object-position:68% 58%;transform-origin:62% 60%;will-change:transform}
+.hero-photo::after{content:'';position:absolute;inset:0;background:linear-gradient(to top,rgba(28,36,50,.55),transparent 42%),linear-gradient(to bottom,rgba(28,36,50,.2),transparent 30%)}
+@media(max-width:760px){.hero-photo img{object-position:64% 60%}}

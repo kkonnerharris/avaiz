@@ -1,5 +1,5 @@
 import './style.css';
-import {services, clamp, makeBrief} from './content.js';
+import {services, clamp, smooth, makeBrief} from './content.js';
 
 const $=selector=>document.querySelector(selector);
 const reducedQuery=matchMedia('(prefers-reduced-motion: reduce)');
@@ -14,10 +14,11 @@ function fallback(error){document.body.classList.add('fallback');ready();console
 const loadingTimeout=setTimeout(()=>{ready()},6000);
 import('./world.js').then(({createWorld})=>{world=createWorld($('#world'),{onReady:()=>{clearTimeout(loadingTimeout);ready()},onFail:fallback});world?.setReduced(reduced);updateScroll();}).catch(fallback);
 
+const heroPhoto=$('.hero-photo'),heroImage=$('.hero-photo img');
 const chapters=[...document.querySelectorAll('.chapter')],panels=[...document.querySelectorAll('.cube-panel')];
 // Maps scroll to the world timeline: igloo until capabilities, cubes held through them, then the ending.
 function worldProgress(total){const y=scrollY,s=$('#services').offsetTop,c=$('#connect').offsetTop-innerHeight;if(y<s)return .54*y/Math.max(1,s);if(y<c)return .54+.19*(y-s)/Math.max(1,c-s);return .73+.27*clamp((y-c)/Math.max(1,total-c));}
-function updateScroll(){const total=document.documentElement.scrollHeight-innerHeight;const progress=clamp(scrollY/Math.max(1,total));world?.setProgress(worldProgress(total));const offsets=panels.map(el=>{const r=el.getBoundingClientRect();return (r.top+r.height/2-innerHeight/2)/innerHeight});panels.forEach((el,i)=>el.classList.toggle('landed',Math.abs(offsets[i])<.2));world?.setCubeOffsets(offsets);$('.progress-track i').style.transform=`scaleX(${progress})`;let active=0;chapters.forEach((el,i)=>{if(el.getBoundingClientRect().top<innerHeight*.55)active=i});document.body.classList.toggle('scrolled',active>0);document.querySelectorAll('.chapter-rail a').forEach((a,i)=>{a.classList.toggle('active',i===active);if(i===active)a.setAttribute('aria-current','location');else a.removeAttribute('aria-current')});}
+function updateScroll(){const total=document.documentElement.scrollHeight-innerHeight;const progress=clamp(scrollY/Math.max(1,total));const wp=worldProgress(total);world?.setProgress(wp);heroPhoto.style.opacity=String(1-smooth(.3,.5,wp));heroImage.style.transform=reduced?'':`scale(${1+smooth(0,.5,wp)*.35})`;const offsets=panels.map(el=>{const r=el.getBoundingClientRect();return (r.top+r.height/2-innerHeight/2)/innerHeight});panels.forEach((el,i)=>el.classList.toggle('landed',Math.abs(offsets[i])<.2));world?.setCubeOffsets(offsets);$('.progress-track i').style.transform=`scaleX(${progress})`;let active=0;chapters.forEach((el,i)=>{if(el.getBoundingClientRect().top<innerHeight*.55)active=i});document.body.classList.toggle('scrolled',active>0);document.querySelectorAll('.chapter-rail a').forEach((a,i)=>{a.classList.toggle('active',i===active);if(i===active)a.setAttribute('aria-current','location');else a.removeAttribute('aria-current')});}
 window.addEventListener('scroll',updateScroll,{passive:true});window.addEventListener('resize',updateScroll);updateScroll();
 function setMotion(value){reduced=value;document.documentElement.classList.toggle('motion-off',reduced);$('#motion').textContent=`Motion: ${reduced?'Off':'On'}`;$('#motion').setAttribute('aria-pressed',String(reduced));world?.setReduced(reduced);}
 setMotion(reduced);$('#motion').addEventListener('click',()=>setMotion(!reduced));reducedQuery.addEventListener('change',e=>setMotion(e.matches));
