@@ -1,0 +1,8 @@
+export const services = {
+  intelligence: { number: 'SYSTEM_01 / APPLIED AI', title: 'Intelligence.\nPut to work.', description: 'AI that fits the way your business works. From answering a customer’s first question to helping your team find the right information, build useful intelligence into everyday work.', items: ['AI assistants and knowledge tools', 'Voice interfaces and conversational agents', 'Customer support chatbots', 'AI integrations for existing workflows'] },
+  automation: { number: 'SYSTEM_02 / CONNECTED WORKFLOWS', title: 'Less repetition.\nMore momentum.', description: 'Connect the tools you already use. Turn a chain of manual steps into a dependable workflow, with clear handoffs and people in control where it matters.', items: ['Workflow and process automation', 'Lead capture and follow-up systems', 'API and application integrations', 'Data routing, notifications, and reporting'] },
+  software: { number: 'SYSTEM_03 / CUSTOM SOFTWARE', title: 'Your business.\nYour software.', description: 'When an off-the-shelf tool doesn’t fit, build something that does. Thoughtful websites, applications, and internal tools shaped around the work you actually need to do.', items: ['Websites and web applications', 'Internal tools and dashboards', 'Custom business software', 'Connected interfaces for your systems'] },
+};
+export const clamp = (v, lo = 0, hi = 1) => Math.min(hi, Math.max(lo, v));
+export const smooth = (a, b, value) => { const t = clamp((value - a) / (b - a)); return t * t * (3 - 2 * t); };
+export function makeBrief(name, need) { return `AVAIZ / PROJECT BRIEF\n\nName / business: ${name.trim()}\n\nWhat needs to work better:\n${need.trim()}\n\nPrepared locally. This brief has not been submitted.\n`; }

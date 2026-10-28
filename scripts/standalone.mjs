@@ -1,0 +1,14 @@
+import {build} from 'esbuild';
+import fs from 'node:fs/promises';
+const result=await build({entryPoints:['src/main.js'],bundle:true,external:['/fonts/*'],format:'iife',target:'es2022',minify:true,write:false,outdir:'standalone-output'});
+const js=result.outputFiles.find(f=>f.path.endsWith('.js')).text;
+let css=result.outputFiles.find(f=>f.path.endsWith('.css')).text;
+const font=(await fs.readFile('public/fonts/mono.ttf')).toString('base64');
+css=css.replaceAll('/fonts/mono.ttf',`data:font/ttf;base64,${font}`);
+let html=await fs.readFile('index.html','utf8');
+const icon=(await fs.readFile('public/favicon.svg')).toString('base64');
+html=html.replace('href="/favicon.svg"',`href="data:image/svg+xml;base64,${icon}"`);
+html=html.replace('</head>',`<style>${css}</style></head>`);
+html=html.replace('<script type="module" src="/src/main.js"></script>',()=>`<script>${js.replaceAll('</script','<\\/script')}</script>`);
+await fs.writeFile('Avaiz-Preview.html',html);
+console.log(`Standalone preview written: ${Math.round(Buffer.byteLength(html)/1024)} KB`);
