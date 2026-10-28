@@ -8,17 +8,26 @@ $('#year').textContent=new Date().getFullYear();
 const loader=$('.loader');
 let loading=0,loaderDone=false;
 const timer=setInterval(()=>{$('#load-value').textContent=String(Math.min(95,loading+=7)).padStart(2,'0')},90);
-function ready(){if(loaderDone)return;loaderDone=true;clearInterval(timer);$('#load-value').textContent='100';setTimeout(()=>{loader.classList.add('hidden');startIntro();},200)}
+function ready(){if(loaderDone)return;loaderDone=true;clearInterval(timer);$('#load-value').textContent='100';setTimeout(()=>loader.classList.add('hidden'),200)}
 function fallback(error){document.body.classList.add('fallback');ready();console.warn('3D view unavailable. Accessible content remains available.',error?.message);}
 // A graphics failure never leaves a blocking loading screen.
 const loadingTimeout=setTimeout(()=>{ready()},6000);
 import('./world.js').then(({createWorld})=>{world=createWorld($('#world'),{onReady:()=>{clearTimeout(loadingTimeout);ready()},onFail:fallback});world?.setReduced(reduced);updateScroll();}).catch(fallback);
 
-const heroPhoto=$('.hero-photo'),heroImage=$('.hero-photo img');
+// Scroll-driven film: every scroll position shows one frame of the film, so scrolling melts the igloo (and scrolling up rebuilds it).
+const FRAMES=121,heroFilm=$('.hero-film'),frameCanvas=$('.film-frame'),fillCanvas=$('.film-fill'),frameCtx=frameCanvas.getContext('2d'),fillCtx=fillCanvas.getContext('2d'),frames=[];let wantFrame=0,shownFrame=-1;
+function usable(image){return image&&image.complete&&image.naturalWidth>0}
+function nearestFrame(i){for(let d=0;d<FRAMES;d++){if(usable(frames[i-d]))return frames[i-d];if(usable(frames[i+d]))return frames[i+d];}return null}
+function drawFrame(force){if(!force&&wantFrame===shownFrame)return;const image=nearestFrame(wantFrame);if(!image)return;shownFrame=usable(frames[wantFrame])?wantFrame:-1;const iw=image.naturalWidth,ih=image.naturalHeight;
+ let W=frameCanvas.width,H=frameCanvas.height,s=Math.min(W/iw,H/ih);frameCtx.clearRect(0,0,W,H);frameCtx.drawImage(image,(W-iw*s)/2,(H-ih*s)/2,iw*s,ih*s);
+ W=fillCanvas.width;H=fillCanvas.height;s=Math.max(W/iw,H/ih);fillCtx.drawImage(image,(W-iw*s)/2,(H-ih*s)/2,iw*s,ih*s);}
+function sizeFilm(){const dpr=Math.min(devicePixelRatio||1,2);frameCanvas.width=Math.round(innerWidth*dpr);frameCanvas.height=Math.round(innerHeight*dpr);fillCanvas.width=Math.round(innerWidth/4);fillCanvas.height=Math.round(innerHeight/4);drawFrame(true);}
+for(let i=0;i<FRAMES;i++){const image=new Image();image.decoding='async';image.onload=()=>{if(i===wantFrame||shownFrame<0)drawFrame(true)};image.src=`${import.meta.env.BASE_URL}media/frames/f${String(i+1).padStart(3,'0')}.webp`;frames.push(image);}
+sizeFilm();window.addEventListener('resize',sizeFilm);
 const chapters=[...document.querySelectorAll('.chapter')],panels=[...document.querySelectorAll('.cube-panel')];
 // Maps scroll to the world timeline: igloo until capabilities, cubes held through them, then the ending.
 function worldProgress(total){const y=scrollY,s=$('#services').offsetTop,c=$('#connect').offsetTop-innerHeight;if(y<s)return .54*y/Math.max(1,s);if(y<c)return .54+.19*(y-s)/Math.max(1,c-s);return .73+.27*clamp((y-c)/Math.max(1,total-c));}
-function updateScroll(){const total=document.documentElement.scrollHeight-innerHeight;const progress=clamp(scrollY/Math.max(1,total));const wp=worldProgress(total);world?.setProgress(wp);heroPhoto.style.opacity=String(1-smooth(.3,.5,wp));heroImage.style.transform=reduced?'':`scale(${1+smooth(0,.5,wp)*.35})`;const offsets=panels.map(el=>{const r=el.getBoundingClientRect();return (r.top+r.height/2-innerHeight/2)/innerHeight});panels.forEach((el,i)=>el.classList.toggle('landed',Math.abs(offsets[i])<.2));world?.setCubeOffsets(offsets);$('.progress-track i').style.transform=`scaleX(${progress})`;let active=0;chapters.forEach((el,i)=>{if(el.getBoundingClientRect().top<innerHeight*.55)active=i});document.body.classList.toggle('scrolled',active>0);document.querySelectorAll('.chapter-rail a').forEach((a,i)=>{a.classList.toggle('active',i===active);if(i===active)a.setAttribute('aria-current','location');else a.removeAttribute('aria-current')});}
+function updateScroll(){const total=document.documentElement.scrollHeight-innerHeight;const progress=clamp(scrollY/Math.max(1,total));const wp=worldProgress(total);world?.setProgress(wp);wantFrame=Math.round(clamp(wp/.42)*(FRAMES-1));drawFrame();heroFilm.style.opacity=String(1-smooth(.42,.53,wp));const offsets=panels.map(el=>{const r=el.getBoundingClientRect();return (r.top+r.height/2-innerHeight/2)/innerHeight});panels.forEach((el,i)=>el.classList.toggle('landed',Math.abs(offsets[i])<.2));world?.setCubeOffsets(offsets);$('.progress-track i').style.transform=`scaleX(${progress})`;let active=0;chapters.forEach((el,i)=>{if(el.getBoundingClientRect().top<innerHeight*.55)active=i});document.body.classList.toggle('scrolled',active>0);document.querySelectorAll('.chapter-rail a').forEach((a,i)=>{a.classList.toggle('active',i===active);if(i===active)a.setAttribute('aria-current','location');else a.removeAttribute('aria-current')});}
 window.addEventListener('scroll',updateScroll,{passive:true});window.addEventListener('resize',updateScroll);updateScroll();
 function setMotion(value){reduced=value;document.documentElement.classList.toggle('motion-off',reduced);$('#motion').textContent=`Motion: ${reduced?'Off':'On'}`;$('#motion').setAttribute('aria-pressed',String(reduced));world?.setReduced(reduced);}
 setMotion(reduced);$('#motion').addEventListener('click',()=>setMotion(!reduced));reducedQuery.addEventListener('change',e=>setMotion(e.matches));
@@ -44,15 +53,3 @@ const overUi=e=>e.target.closest('a,button,input,textarea,dialog,nav');
 document.addEventListener('pointermove',e=>{const i=overUi(e)?-1:world?.pick(e.clientX,e.clientY)??-1;if(i!==iceHover){iceHover=i;document.body.style.cursor=i>=0?'pointer':'';world?.setHovered(i);}},{passive:true});
 document.addEventListener('click',e=>{if(overUi(e))return;const i=world?.pick(e.clientX,e.clientY)??-1;if(i>=0)serviceButtons[i].click();});
 
-// Landing film: plays once in full, then hands straight off to the first ice cube falling in.
-const intro=$('.intro'),film=$('.intro-video'),filmFill=$('.intro-fill');let introDone=false;
-function startIntro(){if(reduced){introDone=true;return}intro.hidden=false;document.documentElement.classList.add('intro-on');scrollTo({top:0,behavior:'instant'});
- Promise.all([film.play(),filmFill.play().catch(()=>{})]).catch(()=>{$('.intro-play').hidden=false});}
-function finishIntro(){if(introDone)return;introDone=true;intro.classList.add('out');document.documentElement.classList.remove('intro-on');filmFill.pause();
- const panel=panels[0],r=panel.getBoundingClientRect();const target=r.top+scrollY+r.height/2-innerHeight/2,start=target-innerHeight*.95;
- scrollTo({top:start,behavior:'instant'});updateScroll();const duration=1800;let t0=0;
- const step=now=>{const k=Math.min(1,(now-t0)/duration);scrollTo({top:start+(target-start)*(1-Math.pow(1-k,3)),behavior:'instant'});if(k<1)requestAnimationFrame(step)};setTimeout(()=>{t0=performance.now();requestAnimationFrame(step)},650);
- setTimeout(()=>{intro.hidden=true;film.pause()},1000);}
-film.addEventListener('ended',finishIntro);$('.intro-skip').addEventListener('click',finishIntro);
-$('.intro-play').addEventListener('click',()=>{$('.intro-play').hidden=true;film.play();filmFill.play().catch(()=>{})});
-$('.intro-sound').addEventListener('click',e=>{film.muted=!film.muted;e.currentTarget.textContent=`Sound: ${film.muted?'Off':'On'}`;e.currentTarget.setAttribute('aria-pressed',String(!film.muted))});

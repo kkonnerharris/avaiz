@@ -10,7 +10,6 @@ const page=await browser.newPage({viewport:{width:1440,height:1000},deviceScaleF
 await page.goto(process.env.BASE_URL||'http://127.0.0.1:4520',{waitUntil:'networkidle'});
 await page.waitForSelector('#world[data-ready=true]',{timeout:45000});checks++;
 await page.waitForSelector('.loader.hidden',{state:'attached'});await page.waitForTimeout(1000);
-assert.equal(await page.locator('.intro').isVisible(),true);checks++;await page.locator('.intro-skip').click();await page.waitForTimeout(1800);assert.equal(await page.locator('.intro').isVisible(),false);
 await page.screenshot({path:'test-results/desktop-hero.png'});
 assert.equal(await page.title(),'Avaiz — Systems for a smarter world.');checks++;
 await page.locator('.menu-toggle').click();assert.equal(await page.locator('#navigation').isVisible(),true);await page.locator('#navigation a[href="#services"]').click();await page.waitForTimeout(1400);assert.equal(await page.locator('#navigation').isVisible(),false);checks++;
