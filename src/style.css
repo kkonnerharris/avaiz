@@ -25,3 +25,14 @@
 .hero-photo img{width:100%;height:100%;object-fit:cover;object-position:68% 58%;transform-origin:62% 60%;will-change:transform}
 .hero-photo::after{content:'';position:absolute;inset:0;background:linear-gradient(to top,rgba(28,36,50,.55),transparent 42%),linear-gradient(to bottom,rgba(28,36,50,.2),transparent 30%)}
 @media(max-width:760px){.hero-photo img{object-position:64% 60%}}
+
+.intro{position:fixed;inset:0;z-index:40;background:#0e141d;overflow:hidden;transition:opacity .9s ease}
+.intro.out{opacity:0;pointer-events:none}
+.intro-fill{position:absolute;inset:-6%;width:112%;height:112%;object-fit:cover;filter:blur(38px) brightness(.72) saturate(1.1)}
+.intro-video{position:absolute;inset:0;width:100%;height:100%;object-fit:contain}
+.intro button{position:absolute;z-index:2;font:inherit;font-size:10px;letter-spacing:1.3px;text-transform:uppercase;color:#fff;background:none;border:0;cursor:pointer;padding:10px 0}
+.intro-skip{right:6.5%;bottom:24px}.intro-skip span,.intro-play span{margin-left:10px}
+.intro-sound{left:6.5%;bottom:24px}
+.intro .intro-play{left:50%;top:50%;transform:translate(-50%,-50%);padding:16px 26px;border:1px solid #ffffff80;background:#0e141d66}
+html.intro-on,html.intro-on body{overflow:hidden}
+@media(max-width:760px){.intro-skip{right:23px}.intro-sound{left:23px}}

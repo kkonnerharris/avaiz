@@ -6,9 +6,9 @@ const reducedQuery=matchMedia('(prefers-reduced-motion: reduce)');
 let reduced=reducedQuery.matches, world=null;
 $('#year').textContent=new Date().getFullYear();
 const loader=$('.loader');
-let loading=0;
+let loading=0,loaderDone=false;
 const timer=setInterval(()=>{$('#load-value').textContent=String(Math.min(95,loading+=7)).padStart(2,'0')},90);
-function ready(){clearInterval(timer);$('#load-value').textContent='100';setTimeout(()=>loader.classList.add('hidden'),200)}
+function ready(){if(loaderDone)return;loaderDone=true;clearInterval(timer);$('#load-value').textContent='100';setTimeout(()=>{loader.classList.add('hidden');startIntro();},200)}
 function fallback(error){document.body.classList.add('fallback');ready();console.warn('3D view unavailable. Accessible content remains available.',error?.message);}
 // A graphics failure never leaves a blocking loading screen.
 const loadingTimeout=setTimeout(()=>{ready()},6000);
@@ -43,3 +43,16 @@ const serviceButtons=[...document.querySelectorAll('[data-service]')];let iceHov
 const overUi=e=>e.target.closest('a,button,input,textarea,dialog,nav');
 document.addEventListener('pointermove',e=>{const i=overUi(e)?-1:world?.pick(e.clientX,e.clientY)??-1;if(i!==iceHover){iceHover=i;document.body.style.cursor=i>=0?'pointer':'';world?.setHovered(i);}},{passive:true});
 document.addEventListener('click',e=>{if(overUi(e))return;const i=world?.pick(e.clientX,e.clientY)??-1;if(i>=0)serviceButtons[i].click();});
+
+// Landing film: plays once in full, then hands straight off to the first ice cube falling in.
+const intro=$('.intro'),film=$('.intro-video'),filmFill=$('.intro-fill');let introDone=false;
+function startIntro(){if(reduced){introDone=true;return}intro.hidden=false;document.documentElement.classList.add('intro-on');scrollTo({top:0,behavior:'instant'});
+ Promise.all([film.play(),filmFill.play().catch(()=>{})]).catch(()=>{$('.intro-play').hidden=false});}
+function finishIntro(){if(introDone)return;introDone=true;intro.classList.add('out');document.documentElement.classList.remove('intro-on');filmFill.pause();
+ const panel=panels[0],r=panel.getBoundingClientRect();const target=r.top+scrollY+r.height/2-innerHeight/2,start=target-innerHeight*.95;
+ scrollTo({top:start,behavior:'instant'});updateScroll();const duration=1800;let t0=0;
+ const step=now=>{const k=Math.min(1,(now-t0)/duration);scrollTo({top:start+(target-start)*(1-Math.pow(1-k,3)),behavior:'instant'});if(k<1)requestAnimationFrame(step)};setTimeout(()=>{t0=performance.now();requestAnimationFrame(step)},650);
+ setTimeout(()=>{intro.hidden=true;film.pause()},1000);}
+film.addEventListener('ended',finishIntro);$('.intro-skip').addEventListener('click',finishIntro);
+$('.intro-play').addEventListener('click',()=>{$('.intro-play').hidden=true;film.play();filmFill.play().catch(()=>{})});
+$('.intro-sound').addEventListener('click',e=>{film.muted=!film.muted;e.currentTarget.textContent=`Sound: ${film.muted?'Off':'On'}`;e.currentTarget.setAttribute('aria-pressed',String(!film.muted))});
